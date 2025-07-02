@@ -197,5 +197,14 @@ public class LogService {
 
         return anomalies;
     }
+    public String explainErrorMessage(String message) {
+        message = message.toLowerCase();
 
+        if (message.contains("timeout")) return "The server may be unreachable due to network issues or slow DB.";
+        if (message.contains("null pointer")) return "A variable might be null. Check your initializations.";
+        if (message.contains("disk full")) return "The disk may be full. Consider deleting unused files.";
+        if (message.contains("unexpected shutdown")) return "Could be due to power failure or crash loop.";
+
+        return "No suggestion available for this error.";
+    }
 }

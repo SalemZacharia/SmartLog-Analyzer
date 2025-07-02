@@ -19,9 +19,13 @@ import java.util.Map;
 public class LogController {
 
     private final LogService service;
+    private final LogEntryRepository logEntryRepository;
+    private final LogService logService;
 
-    public LogController(LogService service) {
+    public LogController(LogService service, LogEntryRepository logEntryRepository, LogService logService) {
         this.service = service;
+        this.logEntryRepository = logEntryRepository;
+        this.logService = logService;
     }
 
     @GetMapping("/")
@@ -53,5 +57,12 @@ public class LogController {
 
         return "stats";
     }
-
+    @GetMapping("/logs/explain/{id}")
+    @ResponseBody
+    public String explainError(@PathVariable Long id) {
+        return logEntryRepository.findById(id)
+                .filter(e -> e.getLevel().equalsIgnoreCase("ERROR"))
+                .map(e -> logService.explainErrorMessage(e.getMessage()))
+                .orElse("Not an error or not found.");
+    }
 }

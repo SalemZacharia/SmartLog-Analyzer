@@ -2,18 +2,28 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>📊 Logs analysés</title>
-
+    <title>📊 SmartLogAnalyzer</title>
     <style>
         body {
             font-family: "Segoe UI", sans-serif;
             background-color: #fefefe;
-            padding: 40px;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav {
+            background-color: #4CAF50;
+            padding: 15px 30px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         h1 {
             color: #333;
             text-align: center;
+            margin-top: 30px;
         }
 
         table {
@@ -39,7 +49,7 @@
 
         .back-btn {
             display: inline-block;
-            margin-top: 20px;
+            margin: 20px auto;
             background-color: #2196F3;
             color: white;
             padding: 10px 20px;
@@ -55,52 +65,65 @@
             max-width: 600px;
             margin: 50px auto;
         }
+
+        .stats-container, .anomaly-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 12px;
+            background: #fafafa;
+            border: 1px solid #ccc;
+        }
+
+        .anomaly-container {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+
+        .anomaly-container h3 {
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
+<nav>
+    🚀 SmartLogAnalyzer
+</nav>
+
 <h1>📊 Logs analysés</h1>
 
-
-<div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 12px; background: #fafafa;">
-    <h2 style="text-align: center; color: #333;">📈 Statistiques Générales</h2>
+<div class="stats-container">
+    <h2 style="text-align: center; color: #333;">📈 General Statistics</h2>
     <table>
         <tbody>
-        <tr><td><strong>Total de logs</strong></td><td th:text="${metrics.totalLogs}">0</td></tr>
-        <tr><td><strong>Logs INFO</strong></td><td th:text="${metrics.infoLogs}">0</td></tr>
-        <tr><td><strong>Logs WARN</strong></td><td th:text="${metrics.warnLogs}">0</td></tr>
-        <tr><td><strong>Logs ERROR</strong></td><td th:text="${metrics.errorLogs}">0</td></tr>
-        <tr><td><strong>% d'erreurs</strong></td><td th:text="${metrics.errorRate} + '%'">0%</td></tr>
-        <tr><td><strong>% de warnings</strong></td><td th:text="${metrics.warnRate} + '%'">0%</td></tr>
-        <tr><td><strong>Début</strong></td><td th:text="${metrics.startTime}">--</td></tr>
-        <tr><td><strong>Fin</strong></td><td th:text="${metrics.endTime}">--</td></tr>
-        <tr><td><strong>Durée (min)</strong></td><td th:text="${metrics.durationInMinutes}">0</td></tr>
+        <tr><td><strong>Total Logs</strong></td><td th:text="${metrics.totalLogs}">0</td></tr>
+        <tr><td><strong>INFO Logs</strong></td><td th:text="${metrics.infoLogs}">0</td></tr>
+        <tr><td><strong>WARN Logs</strong></td><td th:text="${metrics.warnLogs}">0</td></tr>
+        <tr><td><strong>ERROR Logs</strong></td><td th:text="${metrics.errorLogs}">0</td></tr>
+        <tr><td><strong>Error Rate</strong></td><td th:text="${metrics.errorRate} + '%'">0%</td></tr>
+        <tr><td><strong>Warning Rate</strong></td><td th:text="${metrics.warnRate} + '%'">0%</td></tr>
+        <tr><td><strong>Start</strong></td><td th:text="${metrics.startTime}">--</td></tr>
+        <tr><td><strong>End</strong></td><td th:text="${metrics.endTime}">--</td></tr>
+        <tr><td><strong>Duration (min)</strong></td><td th:text="${metrics.durationInMinutes}">0</td></tr>
         <tr><td><strong>Logs / minute</strong></td><td th:text="${metrics.logPerMinute}">0</td></tr>
-        <tr><td><strong>Délai moyen entre erreurs (sec)</strong></td><td th:text="${metrics.avgIntervalBetweenErrorsInSec}">0</td></tr>
+        <tr><td><strong>Avg delay between errors (sec)</strong></td><td th:text="${metrics.avgIntervalBetweenErrorsInSec}">0</td></tr>
         </tbody>
     </table>
 </div>
 
-
-<div style="max-width: 600px; margin: 30px auto; background: #fff3cd; padding: 20px; border: 1px solid #ffeeba; border-radius: 10px;">
-    <h3>🧠 Anomalies détectées</h3>
-    <ul>
-        <li th:each="a : ${anomalies}" th:text="${a}">Anomalie</li>
-    </ul>
-    <div th:if="${#lists.isEmpty(anomalies)}">✅ Aucune anomalie détectée.</div>
-</div>
-
-<!-- 📊 Graphique Chart.js -->
+<!-- Chart.js Bar Graph -->
 <div id="chart-container">
     <canvas id="logChart"></canvas>
 </div>
 
-
+<!-- Log Table -->
 <table>
     <thead>
     <tr>
         <th>Date</th>
-        <th>Niveau</th>
+        <th>Level</th>
         <th>Message</th>
+        <th>🔍</th>
     </tr>
     </thead>
     <tbody>
@@ -108,18 +131,31 @@
         <td th:text="${log.timestamp}"></td>
         <td th:text="${log.level}"></td>
         <td th:text="${log.message}"></td>
+        <td>
+            <button th:if="${log.level == 'ERROR'}"
+                    th:attr="onclick=|explain(${log.id})|">❓</button>
+        </td>
     </tr>
     </tbody>
 </table>
 
 <div style="text-align:center">
-    <a class="back-btn" href="/">⬅️ Retour à l'upload</a>
+    <a class="back-btn" href="/">⬅️ Back to Upload</a>
+</div>
+
+<div class="anomaly-container">
+    <h3>🧠 Detected Anomalies</h3>
+    <ul>
+        <li th:each="a : ${anomalies}" th:text="${a}">Anomaly</li>
+    </ul>
+    <div th:if="${#lists.isEmpty(anomalies)}">✅ No anomalies detected.</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:inline="javascript">
-
+    /*<![CDATA[*/
     let logLevelCount = /*[[${logLevelCount}]]*/ {};
+
     const labels = Object.keys(logLevelCount);
     const values = Object.values(logLevelCount);
 
@@ -129,7 +165,7 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Occurrences par niveau',
+                label: 'Log Occurrences by Level',
                 data: values,
                 backgroundColor: ['#4CAF50', '#FFC107', '#F44336']
             }]
@@ -140,12 +176,19 @@
                 legend: { display: false },
                 title: {
                     display: true,
-                    text: 'Répartition des logs'
+                    text: 'Log Level Distribution'
                 }
             }
         }
     });
-
+    /*]]>*/
+</script>
+<script>
+    function explain(id) {
+        fetch('/logs/explain/' + id)
+            .then(res => res.text())
+            .then(text => alert('🧠 AI Suggestion:\n' + text));
+    }
 </script>
 </body>
 </html>

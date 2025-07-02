@@ -9,10 +9,12 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LogService {
@@ -23,7 +25,7 @@ public class LogService {
         this.repository = repository;
     }
 
-    // 🔁 Nouvelle méthode générique
+
     public void parseAndSaveLogs(InputStream inputStream, String filename) {
         try {
             if (filename.endsWith(".log")) {
@@ -36,7 +38,7 @@ public class LogService {
         }
     }
 
-    // 🔤 Parsing d’un fichier .log
+
     private void parseLogText(InputStream inputStream) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         Pattern pattern = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\s+(INFO|ERROR|WARN)\\s+(.*)");
@@ -54,7 +56,7 @@ public class LogService {
         }
     }
 
-    // 📊 Parsing d’un fichier .xlsx
+
     private void parseLogExcel(InputStream inputStream) throws Exception {
         Workbook workbook = new XSSFWorkbook(inputStream);
         Sheet sheet = workbook.getSheetAt(0);
@@ -84,7 +86,7 @@ public class LogService {
         return repository.findAll();
     }
 
-    // 🆕 Utile pour Chart.js plus tard
+
     public Map<String, Long> getLogLevelCount() {
         List<LogEntry> all = repository.findAll();
         Map<String, Long> countMap = new HashMap<>();
@@ -93,4 +95,56 @@ public class LogService {
         }
         return countMap;
     }
+    public Map<String, Object> getLogMetrics() {
+        List<LogEntry> logs = repository.findAll().stream()
+                .sorted(Comparator.comparing(LogEntry::getTimestamp))
+                .collect(Collectors.toList());
+
+        Map<String, Object> metrics = new LinkedHashMap<>();
+
+        if (logs.isEmpty()) return metrics;
+
+        LocalDateTime start = logs.get(0).getTimestamp();
+        LocalDateTime end = logs.get(logs.size() - 1).getTimestamp();
+        long total = logs.size();
+        long errors = logs.stream().filter(l -> l.getLevel().equals("ERROR")).count();
+        long warnings = logs.stream().filter(l -> l.getLevel().equals("WARN")).count();
+        long infos = logs.stream().filter(l -> l.getLevel().equals("INFO")).count();
+
+        double errorRate = total > 0 ? (double) errors / total * 100 : 0;
+        double warnRate = total > 0 ? (double) warnings / total * 100 : 0;
+
+        // Moyenne d'intervalle entre erreurs
+        List<LocalDateTime> errorTimes = logs.stream()
+                .filter(l -> l.getLevel().equals("ERROR"))
+                .map(LogEntry::getTimestamp)
+                .toList();
+
+        long avgIntervalBetweenErrors = 0;
+        if (errorTimes.size() > 1) {
+            List<Long> intervals = new ArrayList<>();
+            for (int i = 1; i < errorTimes.size(); i++) {
+                intervals.add(Duration.between(errorTimes.get(i - 1), errorTimes.get(i)).toSeconds());
+            }
+            avgIntervalBetweenErrors = (long) intervals.stream().mapToLong(Long::longValue).average().orElse(0);
+        }
+
+        Duration duration = Duration.between(start, end);
+        long minutes = Math.max(duration.toMinutes(), 1);
+
+        metrics.put("totalLogs", total);
+        metrics.put("infoLogs", infos);
+        metrics.put("warnLogs", warnings);
+        metrics.put("errorLogs", errors);
+        metrics.put("errorRate", String.format("%.2f", errorRate));
+        metrics.put("warnRate", String.format("%.2f", warnRate));
+        metrics.put("startTime", start);
+        metrics.put("endTime", end);
+        metrics.put("durationInMinutes", minutes);
+        metrics.put("logPerMinute", total / minutes);
+        metrics.put("avgIntervalBetweenErrorsInSec", avgIntervalBetweenErrors);
+
+        return metrics;
+    }
+    
 }

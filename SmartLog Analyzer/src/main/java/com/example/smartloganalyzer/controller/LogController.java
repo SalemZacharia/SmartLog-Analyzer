@@ -3,6 +3,8 @@ package com.example.smartloganalyzer.controller;
 import com.example.smartloganalyzer.model.LogEntry;
 import com.example.smartloganalyzer.repository.LogEntryRepository;
 import com.example.smartloganalyzer.service.LogService;
+import org.springframework.ui.Model;
+import java.util.Map;
 
 
 import org.springframework.stereotype.Controller;
@@ -41,8 +43,12 @@ public class LogController {
     public String showLogs(Model model) {
         List<LogEntry> logs = service.getAllLogs();
         Map<String, Long> logLevelCount = service.getLogLevelCount();
+        Map<String, Object> metrics = service.getLogMetrics();
+
         model.addAttribute("logs", logs);
         model.addAttribute("logLevelCount", logLevelCount);
+        model.addAttribute("metrics", metrics);
+
         return "stats";
     }
 

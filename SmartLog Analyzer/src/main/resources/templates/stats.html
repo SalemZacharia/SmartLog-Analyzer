@@ -3,24 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>📊 Logs analysés</title>
-    <div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 12px; background: #fafafa;">
-        <h2 style="text-align: center; color: #333;">📈 Statistiques Générales</h2>
-        <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
-            <tbody>
-            <tr><td><strong>Total de logs</strong></td><td th:text="${metrics.totalLogs}">0</td></tr>
-            <tr><td><strong>Logs INFO</strong></td><td th:text="${metrics.infoLogs}">0</td></tr>
-            <tr><td><strong>Logs WARN</strong></td><td th:text="${metrics.warnLogs}">0</td></tr>
-            <tr><td><strong>Logs ERROR</strong></td><td th:text="${metrics.errorLogs}">0</td></tr>
-            <tr><td><strong>% d'erreurs</strong></td><td th:text="${metrics.errorRate} + '%'">0%</td></tr>
-            <tr><td><strong>% de warnings</strong></td><td th:text="${metrics.warnRate} + '%'">0%</td></tr>
-            <tr><td><strong>Début</strong></td><td th:text="${metrics.startTime}">--</td></tr>
-            <tr><td><strong>Fin</strong></td><td th:text="${metrics.endTime}">--</td></tr>
-            <tr><td><strong>Durée (min)</strong></td><td th:text="${metrics.durationInMinutes}">0</td></tr>
-            <tr><td><strong>Logs / minute</strong></td><td th:text="${metrics.logPerMinute}">0</td></tr>
-            <tr><td><strong>Délai moyen entre erreurs (sec)</strong></td><td th:text="${metrics.avgIntervalBetweenErrorsInSec}">0</td></tr>
-            </tbody>
-        </table>
-    </div>
+
     <style>
         body {
             font-family: "Segoe UI", sans-serif;
@@ -77,12 +60,41 @@
 <body>
 <h1>📊 Logs analysés</h1>
 
-<!-- Graphique Chart.js -->
+
+<div style="max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 12px; background: #fafafa;">
+    <h2 style="text-align: center; color: #333;">📈 Statistiques Générales</h2>
+    <table>
+        <tbody>
+        <tr><td><strong>Total de logs</strong></td><td th:text="${metrics.totalLogs}">0</td></tr>
+        <tr><td><strong>Logs INFO</strong></td><td th:text="${metrics.infoLogs}">0</td></tr>
+        <tr><td><strong>Logs WARN</strong></td><td th:text="${metrics.warnLogs}">0</td></tr>
+        <tr><td><strong>Logs ERROR</strong></td><td th:text="${metrics.errorLogs}">0</td></tr>
+        <tr><td><strong>% d'erreurs</strong></td><td th:text="${metrics.errorRate} + '%'">0%</td></tr>
+        <tr><td><strong>% de warnings</strong></td><td th:text="${metrics.warnRate} + '%'">0%</td></tr>
+        <tr><td><strong>Début</strong></td><td th:text="${metrics.startTime}">--</td></tr>
+        <tr><td><strong>Fin</strong></td><td th:text="${metrics.endTime}">--</td></tr>
+        <tr><td><strong>Durée (min)</strong></td><td th:text="${metrics.durationInMinutes}">0</td></tr>
+        <tr><td><strong>Logs / minute</strong></td><td th:text="${metrics.logPerMinute}">0</td></tr>
+        <tr><td><strong>Délai moyen entre erreurs (sec)</strong></td><td th:text="${metrics.avgIntervalBetweenErrorsInSec}">0</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div style="max-width: 600px; margin: 30px auto; background: #fff3cd; padding: 20px; border: 1px solid #ffeeba; border-radius: 10px;">
+    <h3>🧠 Anomalies détectées</h3>
+    <ul>
+        <li th:each="a : ${anomalies}" th:text="${a}">Anomalie</li>
+    </ul>
+    <div th:if="${#lists.isEmpty(anomalies)}">✅ Aucune anomalie détectée.</div>
+</div>
+
+<!-- 📊 Graphique Chart.js -->
 <div id="chart-container">
     <canvas id="logChart"></canvas>
 </div>
 
-<!-- Tableau des logs -->
+
 <table>
     <thead>
     <tr>
@@ -104,13 +116,10 @@
     <a class="back-btn" href="/">⬅️ Retour à l'upload</a>
 </div>
 
-<!-- Script Chart.js avec Thymeleaf -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:inline="javascript">
-    /*<![CDATA[*/
-    let logLevelCount = [[${logLevelCount}]];
 
-    // Transforme en labels / valeurs
+    let logLevelCount = /*[[${logLevelCount}]]*/ {};
     const labels = Object.keys(logLevelCount);
     const values = Object.values(logLevelCount);
 
@@ -136,7 +145,7 @@
             }
         }
     });
-    /*]]>*/
+
 </script>
 </body>
 </html>

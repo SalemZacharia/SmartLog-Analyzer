@@ -48,6 +48,8 @@ public class LogController {
         model.addAttribute("logs", logs);
         model.addAttribute("logLevelCount", logLevelCount);
         model.addAttribute("metrics", metrics);
+        List<String> anomalies = service.detectAnomalies();
+        model.addAttribute("anomalies", anomalies);
 
         return "stats";
     }

@@ -146,5 +146,56 @@ public class LogService {
 
         return metrics;
     }
-    
+    public List<String> detectAnomalies() {
+        List<LogEntry> logs = repository.findAll().stream()
+                .sorted(Comparator.comparing(LogEntry::getTimestamp))
+                .collect(Collectors.toList());
+
+        List<String> anomalies = new ArrayList<>();
+        int warnStreak = 0;
+        String lastErrorMessage = null;
+        int repeatedErrorCount = 0;
+
+        for (int i = 0; i < logs.size(); i++) {
+            LogEntry current = logs.get(i);
+
+            // 🔍 1. ERROR suivie d’un RESTART
+            if (current.getLevel().equals("ERROR")) {
+                if (i + 1 < logs.size()) {
+                    LogEntry next = logs.get(i + 1);
+                    if (next.getMessage().toUpperCase().contains("RESTART")) {
+                        anomalies.add("⚠️ Erreur critique suivie d’un redémarrage détectée à " + current.getTimestamp());
+                    }
+                }
+            }
+
+            // 🔍 2. Trois WARN consécutifs sans INFO
+            if (current.getLevel().equals("WARN")) {
+                warnStreak++;
+            } else if (current.getLevel().equals("INFO")) {
+                warnStreak = 0; // reset
+            }
+
+            if (warnStreak == 3) {
+                anomalies.add("🚨 3 WARN consécutifs sans INFO détectés à " + current.getTimestamp());
+                warnStreak = 0;
+            }
+
+            // 🔍 3. Même message d’erreur répété
+            if (current.getLevel().equals("ERROR")) {
+                if (lastErrorMessage != null && lastErrorMessage.equals(current.getMessage())) {
+                    repeatedErrorCount++;
+                    if (repeatedErrorCount == 2) {
+                        anomalies.add("🔁 Erreur répétée plusieurs fois : \"" + current.getMessage() + "\" à " + current.getTimestamp());
+                    }
+                } else {
+                    lastErrorMessage = current.getMessage();
+                    repeatedErrorCount = 1;
+                }
+            }
+        }
+
+        return anomalies;
+    }
+
 }

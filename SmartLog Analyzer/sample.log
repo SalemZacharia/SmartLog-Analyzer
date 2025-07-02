@@ -1,0 +1,5 @@
+2025-07-02 12:00:01 INFO  Application started
+2025-07-02 12:01:45 WARN  Memory usage high
+2025-07-02 12:02:33 ERROR Failed to connect to DB
+2025-07-02 12:03:10 INFO  User login successful
+2025-07-02 12:04:00 ERROR Timeout while reading socket

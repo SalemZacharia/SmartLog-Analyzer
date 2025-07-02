@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>📊 Résultats d'analyse</title>
+    <title>📊 Logs analysés</title>
     <style>
         body {
             font-family: "Segoe UI", sans-serif;
@@ -49,10 +49,22 @@
         .back-btn:hover {
             background-color: #1976D2;
         }
+
+        #chart-container {
+            max-width: 600px;
+            margin: 50px auto;
+        }
     </style>
 </head>
 <body>
 <h1>📊 Logs analysés</h1>
+
+<!-- Graphique Chart.js -->
+<div id="chart-container">
+    <canvas id="logChart"></canvas>
+</div>
+
+<!-- Tableau des logs -->
 <table>
     <thead>
     <tr>
@@ -73,5 +85,40 @@
 <div style="text-align:center">
     <a class="back-btn" href="/">⬅️ Retour à l'upload</a>
 </div>
+
+<!-- Script Chart.js avec Thymeleaf -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let logLevelCount = [[${logLevelCount}]];
+
+    // Transforme en labels / valeurs
+    const labels = Object.keys(logLevelCount);
+    const values = Object.values(logLevelCount);
+
+    const ctx = document.getElementById('logChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Occurrences par niveau',
+                data: values,
+                backgroundColor: ['#4CAF50', '#FFC107', '#F44336']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Répartition des logs'
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
 </body>
 </html>

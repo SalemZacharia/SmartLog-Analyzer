@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class LogController {
@@ -29,7 +30,7 @@ public class LogController {
     @PostMapping("/upload")
     public String handleUpload(@RequestParam("file") MultipartFile file, Model model) {
         try {
-            service.parseAndSaveLogs(file.getInputStream());
+            service.parseAndSaveLogs(file.getInputStream(), file.getOriginalFilename());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -39,7 +40,10 @@ public class LogController {
     @GetMapping("/logs")
     public String showLogs(Model model) {
         List<LogEntry> logs = service.getAllLogs();
+        Map<String, Long> logLevelCount = service.getLogLevelCount();
         model.addAttribute("logs", logs);
+        model.addAttribute("logLevelCount", logLevelCount);
         return "stats";
     }
+
 }

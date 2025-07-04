@@ -2,7 +2,7 @@ SmartLog Analyzer
 
 SmartLog Analyzer is a Spring Boot web application for analyzing log files (text and Excel formats), detecting anomalies, and visualizing key metrics through a user-friendly interface.
 
-🌍 Features
+🌍Features
 
 🔢 Log Parsing & Storage
 
